@@ -21,10 +21,10 @@ public class JWKaccess {
 	}
 
 
-	private void getKeys() throws IOException{
+	private void getKeys(String domainJWK) throws IOException{
 		OkHttpClient client = new OkHttpClient().newBuilder().build();
 		Request request = new Request.Builder()
-				  .url("https://curious-hawk-wpd2yq-dev-ed.my.salesforce.com/id/keys")
+				  .url(domainJWK)
 				  .method("GET", null)
 				  .build();
 		Response response = client.newCall(request).execute();
@@ -37,11 +37,13 @@ public class JWKaccess {
 		}
 	}
 	
-	public Key getKey(String kid) throws IOException{
+	public Key getKey(String kid, String domainJWK) throws IOException{
 		if(this.mapKeys.isEmpty()) {
-			this.getKeys();
+			this.getKeys(domainJWK);
 		}
-		System.out.println(mapKeys.size());
+		
+		System.out.println("Total de Public Keys disponibles: " + mapKeys.size());
+		
 		return this.mapKeys.get(kid);
 	}
 }

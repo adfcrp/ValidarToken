@@ -15,18 +15,19 @@ import java.util.Calendar;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.example.springbootdocker.Models.BodyRequest;
 import com.example.springbootdocker.Models.Key;
 
 public class VerifyToken {
 	
-	public static void check(String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, URISyntaxException{
+	public static void check(BodyRequest body) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, URISyntaxException, RuntimeException {
 
 		JWKaccess jwk = new JWKaccess();
 		
-		DecodedJWT jwt = JWT.decode(token);
+		DecodedJWT jwt = JWT.decode(body.getTokenJWT());
 		
-		Key key = jwk.getKey(jwt.getKeyId());
-		System.out.println(key.getKid());
+		Key key = jwk.getKey(jwt.getKeyId(), body.getDomainJWK());
+		System.out.println("kid: " + key.getKid());
 		
 		BigInteger modulus = new BigInteger(1, Base64.getUrlDecoder().decode(key.getN()));
 		BigInteger exponent = new BigInteger(1, Base64.getUrlDecoder().decode(key.getE()));
@@ -36,8 +37,10 @@ public class VerifyToken {
 		algorithm.verify(jwt);
 		
 		// Check expiration
-		if (jwt.getExpiresAt().before(Calendar.getInstance().getTime())) {
-			throw new RuntimeException("Expired token!");
+		if(body.getValidateExpiration()) {
+			if (jwt.getExpiresAt().before(Calendar.getInstance().getTime())) {
+				throw new RuntimeException("Expired token!");
+			}
 		}
 	}
 }
